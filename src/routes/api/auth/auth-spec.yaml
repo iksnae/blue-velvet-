@@ -1,0 +1,199 @@
+openapi: 3.0.1
+info:
+  title: Account Management
+  description: |
+    Endpoints for managing user accounts, including registration, authentication,
+    and account details. These operations ensure secure access and session management
+    for users of the storytelling platform.
+  version: 0.0.1
+servers:
+  - url: https://{apiGatewayId}.execute-api.{region}.amazonaws.com/Prod
+    variables:
+      apiGatewayId:
+        default: tfxtbt3cvc
+        description: API Gateway ID for the endpoint.
+      region:
+        default: us-east-1
+        description: AWS region.
+  - url: http://localhost:8080
+    description: Local development server
+paths:
+  /account/register:
+    post:
+      summary: Register a new account
+      description: Create a new user account with email, password, and name credentials. Initiates the account verification process.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email address of the user.
+                password:
+                  type: string
+                  format: password
+                  description: The password for the account.
+                name:
+                  type: string
+                  description: The name of the user.
+              required:
+                - email
+                - password
+                - name
+      responses:
+        '201':
+          description: Account successfully registered
+        '400':
+          description: Invalid request data
+
+  /account/authenticate:
+    post:
+      summary: Authenticate user
+      description: Authenticate a user and generate session tokens for API access.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email address of the user.
+                password:
+                  type: string
+                  format: password
+                  description: The password for the account.
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Authentication successful
+        '401':
+          description: Invalid credentials
+
+  /account/verify:
+    post:
+      summary: Verify account
+      description: Complete the account verification process using the verification code sent during registration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email address used during registration.
+                confirmationCode:
+                  type: string
+                  description: The verification code sent to the user's email.
+              required:
+                - email
+                - confirmationCode
+      responses:
+        '200':
+          description: Account verified
+        '400':
+          description: Invalid verification code
+
+  /account/refresh:
+    post:
+      summary: Refresh account session
+      description: Extend the current session's validity period without requiring re-authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: The refresh token for session renewal.
+              required:
+                - refreshToken
+      responses:
+        '200':
+          description: Session refreshed successfully
+        '401':
+          description: Invalid or expired refresh token
+
+  /account/info:
+    get:
+      summary: Retrieve account information
+      description: Get detailed information about the currently authenticated user's account.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Account information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountInfoResponse'
+        '401':
+          description: Missing or invalid token
+        '404':
+          description: Account not found
+
+components:
+  schemas:
+    AccountData:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - accountType
+        - createdAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the account
+          example: "account#7458d4d8-d081-70aa-3a96-4a92aee97850"
+        name:
+          type: string
+          description: User's name
+          example: "iksnae"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "mustkre8@icloud.com"
+        accountType:
+          type: string
+          description: Type of account
+          example: "Creator"
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2024-12-25T23:47:06.121Z"
+    
+    AccountInfoResponse:
+      type: object
+      required:
+        - message
+        - accountData
+      properties:
+        message:
+          type: string
+          description: Status message
+          example: "Account info retrieved"
+        accountData:
+          $ref: '#/components/schemas/AccountData'
+  
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
