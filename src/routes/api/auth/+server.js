@@ -2,7 +2,18 @@ import { json } from '@sveltejs/kit';
 
 const API_BASE_URL = 'https://ikhsfhbxnd.execute-api.us-east-1.amazonaws.com/Prod';
 
-// Authentication endpoints
+/**
+ * This module provides the API for the Svelte app to authenticate, enabling:
+ * - login
+ * - register
+ * - verify
+ * - refresh
+ * - logout
+ * 
+ * Routes are handled via the dedicated endpoint handlers in their respective directories
+ */
+
+// Handle POST requests to API endpoints for backwards compatibility
 export async function POST({ request, url }) {
     const path = url.pathname.split('/').pop();
     const endpoint = mapEndpoint(path);
@@ -32,8 +43,8 @@ export async function POST({ request, url }) {
     }
 }
 
-// Account info endpoint
-export async function GET({ request, url, cookies }) {
+// Handle GET requests to account/info endpoint
+export async function GET({ request, url }) {
     // Only handle the /account/info endpoint
     if (url.pathname.split('/').pop() !== 'info') {
         return json({ error: 'Invalid endpoint' }, { status: 404 });
